@@ -66,7 +66,8 @@ resource "azurerm_subnet" "uda_subnet" {
 }
 
 resource "azurerm_network_interface" "uda_nic" {
-  name                = "uda-nic"
+  count = var.number_vms
+  name                = "uda-nic${count.index}"
   location            = data.azurerm_resource_group.udacity_rg.location
   resource_group_name = data.azurerm_resource_group.udacity_rg.name
 

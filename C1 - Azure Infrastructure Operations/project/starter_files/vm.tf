@@ -29,7 +29,8 @@
 # }
 
 resource "azurerm_managed_disk" "uda_disk" {
-  name                 = "acctestmd"
+  count = var.number_vms
+  name                 = "acctestmd-${count.index}"
   location             = data.azurerm_resource_group.udacity_rg.location
   resource_group_name  = data.azurerm_resource_group.udacity_rg.name
   storage_account_type = "Standard_LRS"
@@ -44,7 +45,7 @@ resource "azurerm_virtual_machine" "uda_vm" {
   name                  = "uda-vm-${count.index}"
   location              = data.azurerm_resource_group.udacity_rg.location
   resource_group_name   = data.azurerm_resource_group.udacity_rg.name
-  network_interface_ids = [azurerm_network_interface.uda_nic.id]
+  network_interface_ids = [azurerm_network_interface.uda_nic[count.index].id]
   vm_size               = "Standard_DS1_v2"
   availability_set_id = azurerm_availability_set.uda_avaiset.id
   # Uncomment this line to delete the OS disk automatically when deleting the VM
@@ -57,20 +58,20 @@ resource "azurerm_virtual_machine" "uda_vm" {
     id = "/subscriptions/b0882eda-bd5f-4992-98d9-8ea4727eeb53/resourceGroups/udacity/providers/Microsoft.Compute/images/idacityImage"
   }
   storage_os_disk {
-    name              = "myosdisk1"
+    name              = "myosdisk1${count.index}"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
   }
   storage_data_disk {
     create_option = "Attach"
-    name =  azurerm_managed_disk.uda_disk.name
+    name =  azurerm_managed_disk.uda_disk[count.index].name
     lun = 1
-    managed_disk_id = azurerm_managed_disk.uda_disk.id
+    managed_disk_id = azurerm_managed_disk.uda_disk[count.index].id
     disk_size_gb = 50
   }
   os_profile {
-    computer_name  = "hostname"
+    computer_name  = "hostname${count.index}"
     admin_username = "testadmin"
     admin_password = "Password1234!"
   }
