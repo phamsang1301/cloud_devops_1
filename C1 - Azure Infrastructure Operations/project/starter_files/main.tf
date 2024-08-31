@@ -59,6 +59,65 @@ resource "azurerm_network_security_rule" "uda_rule_2" {
   resource_group_name         = data.azurerm_resource_group.udacity_rg.name
   network_security_group_name = azurerm_network_security_group.uda_nsg.name
 }
+# Deny all inbound traffic from the internet (lowest priority)
+resource "azurerm_network_security_rule" "deny_inbound_all" {
+  name                        = "deny_inbound_all"
+  priority                    = 4096  # Lowest priority
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = data.azurerm_resource_group.udacity_rg.name
+  network_security_group_name = azurerm_network_security_group.uda_nsg.name
+}
+
+# Allow inbound traffic inside the same Virtual Network
+resource "azurerm_network_security_rule" "allow_inbound_vnet" {
+  name                        = "allow_inbound_vnet"
+  priority                    = 100  # Higher priority to allow traffic before the deny rule
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "VirtualNetwork"
+  destination_address_prefix  = "VirtualNetwork"
+  resource_group_name         = data.azurerm_resource_group.udacity_rg.name
+  network_security_group_name = azurerm_network_security_group.uda_nsg.name
+}
+
+# Allow outbound traffic inside the same Virtual Network
+resource "azurerm_network_security_rule" "allow_outbound_vnet" {
+  name                        = "allow_outbound_vnet"
+  priority                    = 101  # Priority to allow traffic
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "VirtualNetwork"
+  destination_address_prefix  = "VirtualNetwork"
+  resource_group_name         = data.azurerm_resource_group.udacity_rg.name
+  network_security_group_name = azurerm_network_security_group.uda_nsg.name
+}
+
+# Allow HTTP traffic to the VMs from the load balancer
+resource "azurerm_network_security_rule" "allow_http_from_lb" {
+  name                        = "allow_http_from_lb"
+  priority                    = 102  # Priority higher than the inbound rule for Virtual Network
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "80"
+  source_address_prefix       = "AzureLoadBalancer"
+  destination_address_prefix  = "*"
+  resource_group_name         = data.azurerm_resource_group.udacity_rg.name
+  network_security_group_name = azurerm_network_security_group.uda_nsg.name
+}
 
 resource "azurerm_virtual_network" "udacity_vnet" {
   name                = "udacity-vnet"
